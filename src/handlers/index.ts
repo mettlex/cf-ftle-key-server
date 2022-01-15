@@ -20,9 +20,12 @@ export const handleRequest = async (request: Request): Promise<Response> => {
       response = await handleKeyRecoverRequest(request);
     } else if (path.startsWith("/key/delete")) {
       response = await handleKeyDeleteRequest(request);
+    } else {
+      response = new Response(null, { status: 404 });
     }
   } catch (error) {
     console.error((error as { message: string }).message);
+    response = new Response(null, { status: 500 });
   }
 
   // Set CORS headers
