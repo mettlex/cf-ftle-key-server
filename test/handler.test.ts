@@ -9,8 +9,11 @@ describe("handle", () => {
     jest.resetModules();
   });
 
-  test("send 405 error for GET", async () => {
-    const result = await handleRequest(new Request("/", { method: "GET" }));
-    expect(result.status).toEqual(405);
+  test("/key/store - handle key store", async () => {
+    const result = await handleRequest(
+      new Request("/key/store", { method: "POST" }),
+    );
+
+    expect(result.status).toEqual(500);
   });
 });
