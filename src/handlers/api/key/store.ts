@@ -2,9 +2,9 @@ import buf2hex from "../../../utils/ab-hex";
 import { encrypt2ndKey } from "../../../utils/crypt";
 
 interface RequestBody {
-  "lock-duration"?: number;
-  "first-secret-key"?: string;
-  "second-secret-key"?: string;
+  lock_duration?: number;
+  first_secret_key?: string;
+  second_secret_key?: string;
 }
 
 export const handleKeyStoreRequest = async (
@@ -12,9 +12,9 @@ export const handleKeyStoreRequest = async (
 ): Promise<Response> => {
   const body = (await request.json()) as RequestBody;
 
-  const firstSecretKey = body["first-secret-key"];
-  const secondSecretKey = body["second-secret-key"];
-  const lockDuration = body["lock-duration"];
+  const firstSecretKey = body["first_secret_key"];
+  const secondSecretKey = body["second_secret_key"];
+  const lockDuration = body["lock_duration"];
 
   if (
     typeof firstSecretKey !== "string" ||
@@ -45,13 +45,22 @@ export const handleKeyStoreRequest = async (
     salt,
   });
 
-  const digest = await crypto.subtle.digest("SHA-512", randomBytes);
-  const randomBytesDigestHex = "0x" + buf2hex(digest);
+  const randomBytesDigest = await crypto.subtle.digest("SHA-512", randomBytes);
+  const randomBytesDigestHex = "0x" + buf2hex(randomBytesDigest);
+  const firstSecretKeyDigestHex =
+    "0x" +
+    buf2hex(
+      await crypto.subtle.digest(
+        "SHA-512",
+        new TextEncoder().encode(firstSecretKey),
+      ),
+    );
 
   //@ts-ignore
   await (TIME_LOCK_KV as KVNamespace).put(
     randomBytesDigestHex,
     JSON.stringify({
+      f: firstSecretKeyDigestHex,
       d: lockDuration,
       e: "0x" + buf2hex(encrypted2ndKey),
     }),
@@ -59,10 +68,10 @@ export const handleKeyStoreRequest = async (
 
   const response = new Response(
     JSON.stringify({
-      "random-bytes": "0x" + buf2hex(randomBytes),
-      "random-bytes-digest": randomBytesDigestHex,
-      "key-derivation-algorithom": "PBKDF2",
-      "key-derivation-salt": "0x" + buf2hex(salt),
+      random_bytes: "0x" + buf2hex(randomBytes),
+      random_bytes_digest: randomBytesDigestHex,
+      key_derivation_algorithom: "PBKDF2",
+      key_derivation_salt: "0x" + buf2hex(salt),
     }),
   );
 

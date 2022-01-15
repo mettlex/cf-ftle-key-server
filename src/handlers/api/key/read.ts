@@ -2,12 +2,12 @@ import buf2hex, { hex2buf } from "../../../utils/ab-hex";
 import { encrypt2ndKey } from "../../../utils/crypt";
 
 interface RequestBody {
-  "first-secret-key"?: string;
-  "second-secret-key"?: string;
-  "random-bytes"?: string;
-  "random-bytes-digest"?: string;
-  "key-derivation-algorithom"?: "PBKDF2";
-  "key-derivation-salt"?: string;
+  first_secret_key?: string;
+  second_secret_key?: string;
+  random_bytes?: string;
+  random_bytes_digest?: string;
+  key_derivation_algorithom?: "PBKDF2";
+  key_derivation_salt?: string;
 }
 
 export const handleKeyReadRequest = async (
@@ -15,12 +15,12 @@ export const handleKeyReadRequest = async (
 ): Promise<Response> => {
   const body = (await request.json()) as RequestBody;
 
-  const firstSecretKey = body["first-secret-key"];
-  const secondSecretKey = body["second-secret-key"];
-  const randomBytesHex = body["random-bytes"];
-  const randomBytesDigestHex = body["random-bytes-digest"];
-  const keyDerivationAlgorithm = body["key-derivation-algorithom"];
-  const keyDerivationSaltHex = body["key-derivation-salt"];
+  const firstSecretKey = body["first_secret_key"];
+  const secondSecretKey = body["second_secret_key"];
+  const randomBytesHex = body["random_bytes"];
+  const randomBytesDigestHex = body["random_bytes_digest"];
+  const keyDerivationAlgorithm = body["key_derivation_algorithom"];
+  const keyDerivationSaltHex = body["key_derivation_salt"];
 
   if (
     typeof firstSecretKey !== "string" ||
@@ -57,6 +57,7 @@ export const handleKeyReadRequest = async (
   }
 
   const { e: encrypted2ndKeyFromStorage } = JSON.parse(data) as {
+    f: string;
     d: number;
     e: string;
   };
