@@ -1,3 +1,8 @@
+import {
+  encryption_algorithm,
+  hash_algorithm,
+  key_derivation_iterations,
+} from "../../../constants";
 import buf2hex, { hex2buf } from "../../../utils/ab-hex";
 import { encrypt2ndKey } from "../../../utils/crypt";
 
@@ -8,6 +13,9 @@ interface RequestBody {
   random_bytes_digest?: string;
   key_derivation_algorithom?: "PBKDF2";
   key_derivation_salt?: string;
+  key_derivation_iterations?: number;
+  hash_algorithm?: "SHA-512";
+  encryption_algorithm?: "AES-GCM";
 }
 
 export const handleKeyReadRequest = async (
@@ -21,6 +29,9 @@ export const handleKeyReadRequest = async (
   const randomBytesDigestHex = body["random_bytes_digest"];
   const keyDerivationAlgorithm = body["key_derivation_algorithom"];
   const keyDerivationSaltHex = body["key_derivation_salt"];
+  const hashAlgorithm = body["hash_algorithm"];
+  const encryptionAlgoritm = body["encryption_algorithm"];
+  const keyDerivationIterations = body["key_derivation_iterations"];
 
   if (
     typeof firstSecretKey !== "string" ||
@@ -28,7 +39,10 @@ export const handleKeyReadRequest = async (
     typeof randomBytesHex !== "string" ||
     typeof randomBytesDigestHex !== "string" ||
     typeof keyDerivationSaltHex !== "string" ||
-    keyDerivationAlgorithm !== "PBKDF2"
+    keyDerivationAlgorithm !== "PBKDF2" ||
+    hashAlgorithm !== hash_algorithm ||
+    encryptionAlgoritm !== encryption_algorithm ||
+    keyDerivationIterations !== key_derivation_iterations
   ) {
     return new Response(JSON.stringify({ error: "invalid request body" }), {
       status: 400,
@@ -56,13 +70,28 @@ export const handleKeyReadRequest = async (
     );
   }
 
+  const randomBytes = hex2buf(randomBytesHex);
+
+  const digest =
+    "0x" + buf2hex(await crypto.subtle.digest(hash_algorithm, randomBytes));
+
+  if (digest !== randomBytesDigestHex) {
+    return new Response(
+      JSON.stringify({
+        error: "random bytes digest didn't match with stored digest",
+      }),
+      {
+        status: 400,
+      },
+    );
+  }
+
   const { e: encrypted2ndKeyFromStorage } = JSON.parse(data) as {
     f: string;
     d: number;
     e: string;
   };
 
-  const randomBytes = hex2buf(randomBytesHex);
   const salt = hex2buf(keyDerivationSaltHex);
 
   const encrypted2ndKeyHex =
@@ -83,6 +112,7 @@ export const handleKeyReadRequest = async (
 
   const response = new Response(
     JSON.stringify({ error: "encrypted second secret key did not match" }),
+    { status: 400 },
   );
 
   return response;

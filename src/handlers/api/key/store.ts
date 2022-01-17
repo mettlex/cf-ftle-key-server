@@ -1,5 +1,11 @@
 import buf2hex from "../../../utils/ab-hex";
 import { encrypt2ndKey } from "../../../utils/crypt";
+import {
+  hash_algorithm,
+  key_derivation_algorithom,
+  key_derivation_iterations,
+  encryption_algorithm,
+} from "../../../constants";
 
 interface RequestBody {
   lock_duration?: number;
@@ -35,8 +41,8 @@ export const handleKeyStoreRequest = async (
     );
   }
 
-  const randomBytes = crypto.getRandomValues(new Uint8Array(12)).buffer;
-  const salt = crypto.getRandomValues(new Uint8Array(16)).buffer;
+  const randomBytes = crypto.getRandomValues(new Uint8Array(512)).buffer;
+  const salt = crypto.getRandomValues(new Uint8Array(512)).buffer;
 
   const encrypted2ndKey = await encrypt2ndKey({
     firstSecretKey,
@@ -70,8 +76,11 @@ export const handleKeyStoreRequest = async (
     JSON.stringify({
       random_bytes: "0x" + buf2hex(randomBytes),
       random_bytes_digest: randomBytesDigestHex,
-      key_derivation_algorithom: "PBKDF2",
+      key_derivation_algorithom,
       key_derivation_salt: "0x" + buf2hex(salt),
+      key_derivation_iterations,
+      hash_algorithm,
+      encryption_algorithm,
     }),
   );
 

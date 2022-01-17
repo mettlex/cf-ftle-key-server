@@ -1,12 +1,12 @@
+import { hash_algorithm } from "../../../constants";
 import buf2hex, { hex2buf } from "../../../utils/ab-hex";
-import { getCurrentTimestampFromSolana } from "../time/helpers/solana";
+import { getCurrentTimestamp } from "../../../utils/time";
 
 interface RequestBody {
   first_secret_key?: string;
   random_bytes?: string;
   random_bytes_digest?: string;
-  key_derivation_algorithom?: "PBKDF2";
-  key_derivation_salt?: string;
+  hash_algorithm?: "SHA-512";
 }
 
 interface ResponseBody {
@@ -24,15 +24,13 @@ export const handleKeyRecoverRequest = async (
   const firstSecretKey = body["first_secret_key"];
   const randomBytesHex = body["random_bytes"];
   const randomBytesDigestHex = body["random_bytes_digest"];
-  const keyDerivationAlgorithm = body["key_derivation_algorithom"];
-  const keyDerivationSaltHex = body["key_derivation_salt"];
+  const hashAlgorithm = body["hash_algorithm"];
 
   if (
     typeof firstSecretKey !== "string" ||
     typeof randomBytesHex !== "string" ||
     typeof randomBytesDigestHex !== "string" ||
-    typeof keyDerivationSaltHex !== "string" ||
-    keyDerivationAlgorithm !== "PBKDF2"
+    hashAlgorithm !== hash_algorithm
   ) {
     return new Response(JSON.stringify({ error: "invalid request body" }), {
       status: 400,
@@ -63,7 +61,7 @@ export const handleKeyRecoverRequest = async (
   const randomBytes = hex2buf(randomBytesHex);
 
   const digest =
-    "0x" + buf2hex(await crypto.subtle.digest("SHA-512", randomBytes));
+    "0x" + buf2hex(await crypto.subtle.digest(hash_algorithm, randomBytes));
 
   if (digest !== randomBytesDigestHex) {
     return new Response(
@@ -89,7 +87,7 @@ export const handleKeyRecoverRequest = async (
     "0x" +
     buf2hex(
       await crypto.subtle.digest(
-        "SHA-512",
+        hash_algorithm,
         new TextEncoder().encode(firstSecretKey),
       ),
     );
@@ -105,24 +103,7 @@ export const handleKeyRecoverRequest = async (
     );
   }
 
-  let timestamp: number | null;
-
-  try {
-    timestamp = await getCurrentTimestampFromSolana({
-      url: "https://api.mainnet-beta.solana.com",
-    });
-  } catch (error) {
-    console.error(error);
-
-    try {
-      timestamp = await getCurrentTimestampFromSolana({
-        url: "https://solana-api.projectserum.com",
-      });
-    } catch (error) {
-      console.error(error);
-      timestamp = null;
-    }
-  }
+  const timestamp = await getCurrentTimestamp();
 
   if (!timestamp) {
     const response = new Response(

@@ -1,3 +1,10 @@
+import {
+  encryption_algorithm,
+  hash_algorithm,
+  key_derivation_algorithom,
+  key_derivation_iterations,
+} from "../constants";
+
 interface Inputs {
   firstSecretKey: string;
   secondSecretKey: string;
@@ -14,26 +21,26 @@ export const encrypt2ndKey = async ({
   const importedKeyFrom1stKey = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(firstSecretKey),
-    "PBKDF2",
+    key_derivation_algorithom,
     false,
     ["deriveKey"],
   );
 
   const derivedKey = await crypto.subtle.deriveKey(
     {
-      name: "PBKDF2",
+      name: key_derivation_algorithom,
       salt,
-      iterations: 100000,
-      hash: "SHA-512",
+      iterations: key_derivation_iterations,
+      hash: hash_algorithm,
     },
     importedKeyFrom1stKey,
-    { name: "AES-GCM", length: 256 },
+    { name: encryption_algorithm, length: 256 },
     true,
     ["encrypt"],
   );
 
   const encrypted2ndKey = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv: randomBytes },
+    { name: encryption_algorithm, iv: randomBytes },
     derivedKey,
     new TextEncoder().encode(secondSecretKey),
   );
