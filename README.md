@@ -1,5 +1,7 @@
 #### Cloudflare Worker as Key Server for Federated Time-Lock Encryption Scheme
 
+This implementation follows the [OpenAPI v3.1 Specification](https://github.com/mettlex/federated-time-lock-encryption-open-api-spec)
+
 1. Create `wrangler.toml` file and fill the required information:
 
     ```toml
