@@ -29,7 +29,7 @@ export const handleRequest = async (request: Request): Promise<Response> => {
   }
 
   // Set CORS headers
-  response.headers.set("Access-Control-Allow-Origin", url.origin);
+  response.headers.set("Access-Control-Allow-Origin", "*");
 
   // Append to/Add Vary header so browser will cache response correctly
   response.headers.append("Vary", "Origin");
